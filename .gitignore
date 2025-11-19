@@ -5,3 +5,5 @@ env/
 .venv/
 .ipynb_*
 __pycache__
+data_training.csv
+data_validation.csv
