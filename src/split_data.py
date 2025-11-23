@@ -2,9 +2,7 @@ import pandas as pd
 import sys
 import os
 
-SEED = 42
-
-def split_dataset(data_path, test_size = 0.2):
+def split_dataset(data_path, test_size = 0.2, random_state = 42):
     """
     Split the dataset into training and validation sets.
     
@@ -16,7 +14,7 @@ def split_dataset(data_path, test_size = 0.2):
     df = pd.read_csv(data_path, header=None)
     
     # Shuffle the dataset
-    df = df.sample(frac=1, random_state=SEED).reset_index(drop=True)
+    df = df.sample(frac=1, random_state=random_state).reset_index(drop=True)
     
     # Calculate split index
     split_index = int(len(df) * (1 - test_size))

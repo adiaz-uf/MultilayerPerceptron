@@ -1,0 +1,35 @@
+model_config:
+  model_name: "breast_cancer_diagnosis_v1.2.0"
+  model_version: "1.2.0"
+
+  architecture:
+    hidden_layers: [24, 24]
+    input_dim: 30
+
+    # Possibilities: sigmoid, ReLU
+    activation_fn: "sigmoid"
+    use_dropout_rate: true
+
+  classes:
+    - "B"
+    - "M"
+
+training_params:
+  test_size: 0.2
+  random_state: 42
+  epochs: 200
+  batch_size: 8
+  dropout_rate: 0.2
+
+  # Possibilities: SGD, Adam
+  optimizer:
+    name: "SGD" 
+    learning_rate: 0.001
+    weight_decay: 0.0001
+
+  loss_function:
+    use_pos_weight: false
+
+  early_stopping:
+    patience: 10
+    delta: 0.001
