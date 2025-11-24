@@ -3,7 +3,7 @@ model_config:
   model_version: "1.1.0"
 
   architecture:
-    hidden_layers: [24, 24]
+    hidden_layers: [24, 24, 24]
     input_dim: 30
 
     # Possibilities: sigmoid, ReLU
@@ -15,16 +15,16 @@ model_config:
     - "M"
 
 training_params:
-  test_size: 0.1
+  test_size: 0.2
   random_state: 42
   epochs: 800
-  batch_size: 16
-  dropout_rate: 0.15
+  batch_size: 30
+  dropout_rate: 0.1
 
   # Possibilities: SGD, Adam
   optimizer:
     name: "SGD" 
-    learning_rate: 0.001
+    learning_rate: 0.01
     weight_decay: 0.0001
 
   loss_function:
