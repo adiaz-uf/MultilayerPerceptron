@@ -9,3 +9,4 @@ data_training.csv
 data_validation.csv
 data_validation_predictions.csv
 models
+data

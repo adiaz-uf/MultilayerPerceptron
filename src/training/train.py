@@ -1,3 +1,4 @@
+import os
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
@@ -86,7 +87,7 @@ def train_model(config, dataset_path):
     model = NeuralNetwork(config)
     
     # Get positive class weight if enabled
-    pos_weight = data_loader.pos_weight if config.use_pos_weight else None
+    pos_weight = data_loader.pos_weight if config.use_pos_weight is True else None
     if pos_weight:
         print(f"\nUsing positive class weighting: {pos_weight:.4f}")
     
@@ -96,6 +97,21 @@ def train_model(config, dataset_path):
     print(f"   Batch size: {config.batch_size}")
     print(f"   Learning rate: {config.learning_rate}")
     print(f"   Weight decay: {config.weight_decay}\n")
+    
+    # Open log file for training metrics
+    os.makedirs('models', exist_ok=True)
+    log_filename = f'models/{config.model_name.replace(".npz", "")}_training_log.txt'
+    log_file = open(log_filename, 'w')
+    
+    # Write header to log file
+    log_file.write(f"Training Log: {config.model_name}\n")
+    log_file.write(f"=" * 80 + "\n")
+    log_file.write(f"Optimizer: {config.optimizer_name}\n")
+    log_file.write(f"Batch size: {config.batch_size}\n")
+    log_file.write(f"Learning rate: {config.learning_rate}\n")
+    log_file.write(f"Weight decay: {config.weight_decay}\n")
+    log_file.write(f"Epochs: {config.epochs}\n")
+    log_file.write(f"=" * 80 + "\n\n")
     
     for epoch in range(config.epochs):
         # Training phase
@@ -132,15 +148,40 @@ def train_model(config, dataset_path):
         model.history['train_acc'].append(train_acc)
         model.history['val_acc'].append(val_acc)
         
-        # Print progress
+        # Print progress to console
         print(f"{BOLD_YELLOW}epoch {epoch+1:02d}/{config.epochs} - "
               f"{BOLD_RED}loss: {train_loss:.4f} - acc: {train_acc:.4f} - "
-              f"{BOLD_GREEN}val_loss: {val_loss:.4f} - val_acc: {val_acc:.4f}")
+              f"{BOLD_GREEN}val_loss: {val_loss:.4f} - val_acc: {val_acc:.4f}{RESET}")
+        
+        # Write progress to log file
+        log_file.write(f"epoch {epoch+1:02d}/{config.epochs} - "
+                      f"loss: {train_loss:.4f} - acc: {train_acc:.4f} - "
+                      f"val_loss: {val_loss:.4f} - val_acc: {val_acc:.4f}\n")
+        log_file.flush()  # Ensure it's written immediately
+    
+    # Write final summary to log file
+    log_file.write(f"\n" + "=" * 80 + "\n")
+    log_file.write(f"TRAINING SUMMARY\n")
+    log_file.write(f"=" * 80 + "\n")
+    log_file.write(f"Final Training Loss:     {model.history['train_loss'][-1]:.4f}\n")
+    log_file.write(f"Final Training Accuracy: {model.history['train_acc'][-1]:.4f} ({model.history['train_acc'][-1]*100:.2f}%)\n")
+    log_file.write(f"Final Validation Loss:   {model.history['val_loss'][-1]:.4f}\n")
+    log_file.write(f"Final Validation Accuracy: {model.history['val_acc'][-1]:.4f} ({model.history['val_acc'][-1]*100:.2f}%)\n")
+    log_file.write(f"\n")
+    log_file.write(f"Best Training Accuracy:     {max(model.history['train_acc']):.4f} (epoch {model.history['train_acc'].index(max(model.history['train_acc']))+1})\n")
+    log_file.write(f"Best Validation Accuracy:   {max(model.history['val_acc']):.4f} (epoch {model.history['val_acc'].index(max(model.history['val_acc']))+1})\n")
+    log_file.write(f"Lowest Training Loss:       {min(model.history['train_loss']):.4f} (epoch {model.history['train_loss'].index(min(model.history['train_loss']))+1})\n")
+    log_file.write(f"Lowest Validation Loss:     {min(model.history['val_loss']):.4f} (epoch {model.history['val_loss'].index(min(model.history['val_loss']))+1})\n")
+    log_file.write(f"=" * 80 + "\n")
+    
+    # Close log file
+    log_file.close()
     
     print(f"\n{BOLD_GREEN}Training completed!{RESET}")
+    print(f"Training log saved to: {log_filename}")
     
     # Save model with normalization parameters
-    import os
+    
     os.makedirs('models', exist_ok=True)
     model_path = f'models/{config.model_name}'
     

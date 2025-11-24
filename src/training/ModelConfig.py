@@ -60,7 +60,8 @@ class ModelConfig:
         # 5. Loss Function Settings
         loss_conf = train_params.get('loss_function', {})
         self.use_pos_weight: bool = loss_conf.get('use_pos_weight', False)
-        
+        self.pos_weight: float = float(loss_conf.get('pos_weight', 0.0))
+
         # 6. Early Stopping Settings
         early_stop_conf = train_params.get('early_stopping', {})
         self.early_stopping_patience: int = early_stop_conf.get('patience', 10)

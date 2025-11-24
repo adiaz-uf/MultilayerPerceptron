@@ -112,20 +112,26 @@ class DataLoader:
     def _calculate_class_weights(self):
         """
         Calculate positive class weight for imbalanced datasets.
+        - If pos_weight is defined in config (> 0), use that value
+        - If pos_weight is 0 or not set, calculate automatically from training data
         pos_weight = number of negative samples / number of positive samples
         This helps the model focus more on the minority class.
         """
         if self.config.use_pos_weight:
-            num_positive = np.sum(self.y_train == 1)
-            num_negative = np.sum(self.y_train == 0)
-            
-            if num_positive > 0:
-                self.pos_weight = num_negative / num_positive
+            if self.config.pos_weight > 0.0:
+                self.pos_weight = self.config.pos_weight
             else:
-                self.pos_weight = 1.0
+                # Calculate dynamically from training data distribution
+                num_positive = np.sum(self.y_train == 1)
+                num_negative = np.sum(self.y_train == 0)
+                
+                if num_positive > 0:
+                    self.pos_weight = num_negative / num_positive
+                else:
+                    self.pos_weight = 1.0
         else:
             self.pos_weight = None
-
+            
 
     def get_training_batch(self, batch_size=None):
         """
