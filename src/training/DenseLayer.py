@@ -34,6 +34,13 @@ class DenseLayer:
         # Gradients
         self.dW = None
         self.db = None
+        
+        # Adam optimizer state
+        self.adam_m_w = None  # First moment for weights
+        self.adam_v_w = None  # Second moment for weights
+        self.adam_m_b = None  # First moment for biases
+        self.adam_v_b = None  # Second moment for biases
+        self.adam_t = 0       # Time step for Adam
     
     def _initialize_weights(self, method):
         """Initialize weights using specified method."""
@@ -104,13 +111,19 @@ class DenseLayer:
         else:
             return z  # Linear activation
     
-    def backward(self, dA, learning_rate):
+    def backward(self, dA, learning_rate, optimizer='SGD', weight_decay=0.0, 
+                 beta1=0.9, beta2=0.999, epsilon=1e-8):
         """
-        Backward pass through the layer.
+        Backward pass through the layer with optimizer support.
         
         Args:
             dA: Gradient of loss with respect to output of this layer
             learning_rate: Learning rate for weight updates
+            optimizer: Optimizer name ('SGD' or 'Adam')
+            weight_decay: L2 regularization coefficient
+            beta1: Adam optimizer first moment decay rate
+            beta2: Adam optimizer second moment decay rate
+            epsilon: Small constant for numerical stability
             
         Returns:
             Gradient with respect to input (for previous layer)
@@ -127,14 +140,69 @@ class DenseLayer:
         self.dW = np.dot(self.input.T, dZ) / batch_size
         self.db = np.sum(dZ, axis=0, keepdims=True) / batch_size
         
+        # Apply weight decay (L2 regularization) to weight gradients
+        if weight_decay > 0:
+            self.dW += weight_decay * self.weights
+        
         # Gradient for previous layer
         dA_prev = np.dot(dZ, self.weights.T)
         
-        # Update weights and biases
-        self.weights -= learning_rate * self.dW
-        self.biases -= learning_rate * self.db
+        # Update weights and biases based on optimizer
+        if optimizer.upper() == 'ADAM':
+            self._update_adam(learning_rate, beta1, beta2, epsilon)
+        else:  # Default to SGD
+            self._update_sgd(learning_rate)
         
         return dA_prev
+    
+    def _update_sgd(self, learning_rate):
+        """Update weights using SGD (Stochastic Gradient Descent)."""
+        self.weights -= learning_rate * self.dW
+        self.biases -= learning_rate * self.db
+    
+    def _update_adam(self, learning_rate, beta1=0.9, beta2=0.999, epsilon=1e-8):
+        """
+        Update weights using Adam optimizer.
+        
+        Adam (Adaptive Moment Estimation) combines:
+        - Momentum (first moment)
+        - RMSprop (second moment)
+        
+        Args:
+            learning_rate: Learning rate
+            beta1: Exponential decay rate for first moment
+            beta2: Exponential decay rate for second moment
+            epsilon: Small constant for numerical stability
+        """
+        # Initialize Adam state on first use
+        if self.adam_m_w is None:
+            self.adam_m_w = np.zeros_like(self.weights)
+            self.adam_v_w = np.zeros_like(self.weights)
+            self.adam_m_b = np.zeros_like(self.biases)
+            self.adam_v_b = np.zeros_like(self.biases)
+        
+        # Increment time step
+        self.adam_t += 1
+        
+        # Update biased first moment estimate (momentum)
+        self.adam_m_w = beta1 * self.adam_m_w + (1 - beta1) * self.dW
+        self.adam_m_b = beta1 * self.adam_m_b + (1 - beta1) * self.db
+        
+        # Update biased second raw moment estimate (RMSprop)
+        self.adam_v_w = beta2 * self.adam_v_w + (1 - beta2) * (self.dW ** 2)
+        self.adam_v_b = beta2 * self.adam_v_b + (1 - beta2) * (self.db ** 2)
+        
+        # Compute bias-corrected first moment estimate
+        m_w_corrected = self.adam_m_w / (1 - beta1 ** self.adam_t)
+        m_b_corrected = self.adam_m_b / (1 - beta1 ** self.adam_t)
+        
+        # Compute bias-corrected second raw moment estimate
+        v_w_corrected = self.adam_v_w / (1 - beta2 ** self.adam_t)
+        v_b_corrected = self.adam_v_b / (1 - beta2 ** self.adam_t)
+        
+        # Update weights and biases
+        self.weights -= learning_rate * m_w_corrected / (np.sqrt(v_w_corrected) + epsilon)
+        self.biases -= learning_rate * m_b_corrected / (np.sqrt(v_b_corrected) + epsilon)
     
     # Gradient activation
     def _relu_gradient(self, dA):

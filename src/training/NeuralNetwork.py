@@ -89,7 +89,12 @@ class NeuralNetwork:
         
         # Backpropagate through layers in reverse
         for layer in reversed(self.layers):
-            dA = layer.backward(dA, self.config.learning_rate)
+            dA = layer.backward(
+                dA, 
+                learning_rate=self.config.learning_rate,
+                optimizer=self.config.optimizer_name,
+                weight_decay=self.config.weight_decay
+            )
 
     def binary_cross_entropy(self, y_true, y_pred):
         """

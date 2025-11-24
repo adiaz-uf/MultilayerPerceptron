@@ -92,8 +92,10 @@ def train_model(config, dataset_path):
     
     # Training loop
     print(f"\nStarting training for {config.epochs} epochs...")
+    print(f"   Optimizer: {config.optimizer_name}")
     print(f"   Batch size: {config.batch_size}")
-    print(f"   Learning rate: {config.learning_rate}\n")
+    print(f"   Learning rate: {config.learning_rate}")
+    print(f"   Weight decay: {config.weight_decay}\n")
     
     for epoch in range(config.epochs):
         # Training phase

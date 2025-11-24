@@ -54,7 +54,7 @@ class ModelConfig:
         # 4. Optimizer Settings
         optim = train_params.get('optimizer', {})
         self.optimizer_name: str = optim.get('name', 'SGD')
-        self.learning_rate: float = float(optim.get('learning_rate', 0.01))
+        self.learning_rate: float = float(optim.get('learning_rate', 0.001))
         self.weight_decay: float = float(optim.get('weight_decay', 0.0))
         
         # 5. Loss Function Settings
