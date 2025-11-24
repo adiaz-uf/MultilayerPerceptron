@@ -9,7 +9,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
 from src.training.ModelConfig import ModelConfig
 from src.training.NeuralNetwork import NeuralNetwork
 from src.training.DataLoader import DataLoader
-
 from src.Utils import BOLD_RED, BOLD_GREEN, BOLD_CYAN, BOLD_MAGENTA, RESET
 
 
