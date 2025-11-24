@@ -217,6 +217,13 @@ class NeuralNetwork:
             save_dict[f'layer_{i}_input_size'] = layer.input_size
             save_dict[f'layer_{i}_output_size'] = layer.output_size
         
+        # Save training history
+        if self.history and any(self.history.values()):
+            save_dict['history_train_loss'] = np.array(self.history['train_loss'])
+            save_dict['history_val_loss'] = np.array(self.history['val_loss'])
+            save_dict['history_train_acc'] = np.array(self.history['train_acc'])
+            save_dict['history_val_acc'] = np.array(self.history['val_acc'])
+        
         # Save to compressed .npz file
         np.savez_compressed(filepath, **save_dict)
         print(f"\n> Saving model '{filepath}' to disk...")
@@ -257,6 +264,13 @@ class NeuralNetwork:
         for i in range(num_layers):
             self.layers[i].weights = data[f'layer_{i}_weights']
             self.layers[i].biases = data[f'layer_{i}_biases']
+        
+        # Load training history if available
+        if 'history_train_loss' in data.files:
+            self.history['train_loss'] = data['history_train_loss'].tolist()
+            self.history['val_loss'] = data['history_val_loss'].tolist()
+            self.history['train_acc'] = data['history_train_acc'].tolist()
+            self.history['val_acc'] = data['history_val_acc'].tolist()
         
         print(f"\nModel loaded from '{filepath}'")
         

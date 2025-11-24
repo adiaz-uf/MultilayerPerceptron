@@ -19,6 +19,7 @@ class ModelConfig:
         arch = model_conf.get('architecture', {})
         
         self.model_name: str = model_conf.get('model_name', 'unnamed_model')
+        self.model_version: str = model_conf.get('model_version', 'x.x.x')
         
         # Validation: Input dim is critical for matrix shapes
         if 'input_dim' not in arch:

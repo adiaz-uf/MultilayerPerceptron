@@ -25,13 +25,16 @@ train3:
 
 # Predict
 predict1:
-	@venv/bin/python3 src/predict.py --dataset data/data_validation.csv --model models/breast_cancer_diagnosis_v1.0.0.npz --config model_config/BreastCancerDiagnosis_config_v100.yaml
+	@venv/bin/python3 src/prediction/predict.py --dataset data/data_validation.csv --model models/breast_cancer_diagnosis_v1.0.0.npz --config model_config/BreastCancerDiagnosis_config_v100.yaml
 
 predict2:
-	@venv/bin/python3 src/predict.py --dataset data/data_validation.csv --model models/breast_cancer_diagnosis_v1.1.0.npz --config model_config/BreastCancerDiagnosis_config_v110.yaml
+	@venv/bin/python3 src/prediction/predict.py --dataset data/data_validation.csv --model models/breast_cancer_diagnosis_v1.1.0.npz --config model_config/BreastCancerDiagnosis_config_v110.yaml
 
 predict3:
-	@venv/bin/python3 src/predict.py --dataset data/data_validation.csv --model models/breast_cancer_diagnosis_v1.2.0.npz --config model_config/BreastCancerDiagnosis_config_v120.yaml
+	@venv/bin/python3 src/prediction/predict.py --dataset data/data_validation.csv --model models/breast_cancer_diagnosis_v1.2.0.npz --config model_config/BreastCancerDiagnosis_config_v120.yaml
+	
+compare-all:
+	@venv/bin/python3 src/plotting/compare_all_trainings.py
 
 #accuracy:
 #	@venv/bin/python3 src/Bonus/accuracy.py data/houses.csv data/dataset_train.csv

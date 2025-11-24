@@ -1,11 +1,60 @@
 import sys
 import numpy as np
+import matplotlib.pyplot as plt
 import argparse
 
 from .ModelConfig import ModelConfig
 from .DataLoader import DataLoader
 from .NeuralNetwork import NeuralNetwork
 from ..Utils import BOLD_RED, BOLD_GREEN, BOLD_YELLOW, RESET
+
+
+def plot_learning_curves(model, config):
+    """
+    Plot and save training and validation loss curves.
+    
+    Args:
+        model: NeuralNetwork object with training history
+        config: ModelConfig object with model name
+    """
+    import os
+    
+    # Create plots directory if it doesn't exist
+    os.makedirs('plots', exist_ok=True)
+    
+    # Create figure with subplots for loss and accuracy
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+    
+    epochs = range(1, len(model.history['train_loss']) + 1)
+    
+    # Plot loss
+    ax1.plot(epochs, model.history['train_loss'], 'b-', label='Training Loss', linewidth=2)
+    ax1.plot(epochs, model.history['val_loss'], 'r-', label='Validation Loss', linewidth=2)
+    ax1.set_title('Model Loss', fontsize=14, fontweight='bold')
+    ax1.set_xlabel('Epoch', fontsize=12)
+    ax1.set_ylabel('Loss', fontsize=12)
+    ax1.legend(loc='upper right', fontsize=10)
+    ax1.grid(True, alpha=0.3)
+    
+    # Plot accuracy
+    ax2.plot(epochs, model.history['train_acc'], 'b-', label='Training Accuracy', linewidth=2)
+    ax2.plot(epochs, model.history['val_acc'], 'r-', label='Validation Accuracy', linewidth=2)
+    ax2.set_title('Model Accuracy', fontsize=14, fontweight='bold')
+    ax2.set_xlabel('Epoch', fontsize=12)
+    ax2.set_ylabel('Accuracy', fontsize=12)
+    ax2.legend(loc='lower right', fontsize=10)
+    ax2.grid(True, alpha=0.3)
+    
+    # Adjust layout and save
+    plt.tight_layout()
+    
+    # Save the plot
+    plot_filename = f'plots/{config.model_name.replace(".npz", "")}_learning_curves.png'
+    plt.savefig(plot_filename, dpi=150, bbox_inches='tight')
+    print(f"\n{BOLD_GREEN}Learning curves saved to: {plot_filename}{RESET}")
+    
+    plt.close()
+
 
 def train_model(config, dataset_path):
     """
@@ -100,7 +149,8 @@ def train_model(config, dataset_path):
     
     model.save_model(model_path, normalization_params=normalization_params)
     
-    # TODO: Plot learning curves
+    # Plot learning curves
+    plot_learning_curves(model, config)
     
     return 0
 
