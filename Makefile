@@ -25,7 +25,7 @@ train3:
 
 # Predict
 predict1:
-	@venv/bin/python3 src/prediction/predict.py --dataset data/data_validation.csv --model models/breast_cancer_diagnosis_v1.0.0.npz --config model_config/BreastCancerDiagnosis_config_v100.yaml
+	@venv/bin/python3 src/prediction/predict.py --dataset data/data_test.csv --model models/breast_cancer_diagnosis_v1.0.0.npz --config model_config/BreastCancerDiagnosis_config_v100.yaml
 
 predict2:
 	@venv/bin/python3 src/prediction/predict.py --dataset data/data_validation.csv --model models/breast_cancer_diagnosis_v1.1.0.npz --config model_config/BreastCancerDiagnosis_config_v110.yaml
