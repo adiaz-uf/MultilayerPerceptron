@@ -25,6 +25,13 @@ class NeuralNetwork:
             'train_acc': [],
             'val_acc': []
         }
+
+        # Early stopping state
+        self.best_weights = None
+        self.best_val_loss = float('inf')
+        self.best_epoch = 0
+        self.patience_counter = 0
+        self.stopped_epoch = None
     
     def _build_network(self):
         """Build network architecture from config."""
@@ -159,6 +166,81 @@ class NeuralNetwork:
         predictions = (y_pred[:, 1] > 0.5).astype(int).reshape(-1, 1)
         true_labels = y_true[:, 1].reshape(-1, 1)
         return np.mean(predictions == true_labels)
+    
+    def check_early_stopping(self, current_val_loss, epoch):
+        """
+        Check if training should stop early based on validation loss.
+        
+        Args:
+            val_loss: Current validation loss
+            epoch: Current epoch number
+            
+        Returns:
+            bool: True if training should stop, False otherwise
+        """
+
+        patience = self.config.early_stopping_patience
+
+        if patience <= 0:
+            return False
+    
+        delta = self.config.early_stopping_delta
+        restore_weights = self.config.restore_best_weights
+
+        if current_val_loss < (self.best_val_loss - delta):
+            self.best_val_loss = current_val_loss
+            self.best_epoch = epoch
+            self.patience_counter = 0
+
+            if restore_weights:
+                self.best_weights = self._copy_weights()
+
+            return False
+        else:
+            self.patience_counter += 1
+            if self.patience_counter >= patience:
+
+                if restore_weights:
+                    self._restore_weights(self.best_weights)
+                    print(f"\nRestoring model weights from epoch {self.best_epoch}")
+
+                return True
+
+        return False
+    
+    def _copy_weights(self):
+        """Create a deep copy of all layer weights, biases and optimizer state."""
+        weights_copy = []
+        for layer in self.layers:
+            layer_state = {
+                'weights': layer.weights.copy(),
+                'biases': layer.biases.copy()
+            }
+        
+            # Save Adam optimizer state if it exists
+            if layer.adam_m_w is not None:
+                layer_state['adam_m_w'] = layer.adam_m_w.copy()
+                layer_state['adam_v_w'] = layer.adam_v_w.copy()
+                layer_state['adam_m_b'] = layer.adam_m_b.copy()
+                layer_state['adam_v_b'] = layer.adam_v_b.copy()
+                layer_state['adam_t'] = layer.adam_t
+        
+        weights_copy.append(layer_state)
+        return weights_copy
+    
+    def _restore_weights(self, weights_copy):
+        """Restore weights, biases, and optimizer state from a saved copy."""
+        for i, layer_state in enumerate(weights_copy):
+            self.layers[i].weights = layer_state['weights'].copy()
+            self.layers[i].biases = layer_state['biases'].copy()
+            
+            # Restore Adam optimizer state if it was saved
+            if 'adam_m_w' in layer_state:
+                self.layers[i].adam_m_w = layer_state['adam_m_w'].copy()
+                self.layers[i].adam_v_w = layer_state['adam_v_w'].copy()
+                self.layers[i].adam_m_b = layer_state['adam_m_b'].copy()
+                self.layers[i].adam_v_b = layer_state['adam_v_b'].copy()
+                self.layers[i].adam_t = layer_state['adam_t']
     
     def __repr__(self):
         return f"NeuralNetwork(layers={len(self.layers)}, params={self.count_parameters()})"

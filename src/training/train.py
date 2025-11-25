@@ -166,7 +166,13 @@ def train_model(config, dataset_path):
                       f"val_loss: {val_loss:.4f} - val_acc: {val_acc:.4f}\n")
         log_file.flush()  # Ensure it's written immediately
 
-        # TODO: implement early stopping
+        # Early stopping check
+        if model.check_early_stopping(val_loss, epoch + 1):
+            print(f"\n{BOLD_YELLOW}Early stopping triggered at epoch {epoch + 1}{RESET}")
+            print(f"Best validation loss: {model.best_val_loss:.4f}")
+            log_file.write(f"\nEarly stopping triggered at epoch {epoch + 1}\n")
+            log_file.write(f"Best validation loss: {model.best_val_loss:.4f}\n")
+            break
     
     # Write final summary to log file
     log_file.write(f"\n" + "=" * 80 + "\n")
