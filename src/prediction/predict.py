@@ -134,8 +134,13 @@ def load_and_predict(model_path, data_path, config_path):
         FP = np.sum((pred_classes == 1) & (y_true_classes == 0))
         FN = np.sum((pred_classes == 0) & (y_true_classes == 1))
         
+        # Compute precision
         precision = TP / (TP + FP) if (TP + FP) > 0 else 0
+
+        # Compute recall
         recall = TP / (TP + FN) if (TP + FN) > 0 else 0
+
+        # Compute F1 score
         f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
         
         print(f"{BOLD_GREEN}EVALUATION METRICS:{RESET}")
