@@ -15,8 +15,9 @@ model_config:
     - "M"
 
 training_params:
-  test_size: 0.1
-  random_state: 45
+  test_size: 0.15   # Percentage of data reserved for final testing (never seen during training)
+  val_size: 0.15    # Percentage of data used for validation (early stopping, hyperparameter tuning)
+  random_state: 42  # Random factor to split data
   epochs: 900
   batch_size: 24
   dropout_rate: 0.0
@@ -32,6 +33,6 @@ training_params:
     pos_weight: 0.0
 
   early_stopping:
-    patience: 10
+    patience: 0
     delta: 0.001
     restore_best_weights: false

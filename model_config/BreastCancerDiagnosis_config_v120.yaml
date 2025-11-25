@@ -16,6 +16,7 @@ model_config:
 
 training_params:
   test_size: 0.15
+  val_size: 0.15
   random_state: 42
   epochs: 1200
   batch_size: 4
@@ -32,6 +33,6 @@ training_params:
     pos_weight: 0.0
 
   early_stopping:
-    patience: 10
-    delta: 0.001
+    patience: 15
+    delta: 0.0005
     restore_best_weights: false

@@ -43,7 +43,8 @@ class ModelConfig:
         
         self.epochs: int = train_params.get('epochs', 100)
         self.batch_size: int = train_params.get('batch_size', 8)
-        self.test_size: float = train_params.get('test_size', 0.2)
+        self.test_size: float = float(train_params.get('test_size', 0.15))
+        self.val_size: float = float(train_params.get('val_size', 0.15))
         self.random_state: int = train_params.get('random_state', 42)
         
         # Dropout Logic: Check if enabled in architecture, then get rate from training params

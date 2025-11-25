@@ -7,7 +7,7 @@ import argparse
 from .ModelConfig import ModelConfig
 from .DataLoader import DataLoader
 from .NeuralNetwork import NeuralNetwork
-from ..Utils import BOLD_RED, BOLD_GREEN, BOLD_YELLOW, RESET
+from ..Utils import BOLD_RED, BOLD_GREEN, BOLD_YELLOW, BOLD_MAGENTA, RESET
 
 
 def plot_learning_curves(model, config):
@@ -81,6 +81,7 @@ def train_model(config, dataset_path):
         return one_hot
     
     y_train = to_one_hot(data_loader.y_train)
+    y_val = to_one_hot(data_loader.y_val)
     y_test = to_one_hot(data_loader.y_test)
     
     # Initialize Neural Network
@@ -144,10 +145,10 @@ def train_model(config, dataset_path):
         train_pred = model.forward(data_loader.X_train, training=False)
         train_acc = model.accuracy(y_train, train_pred)
         
-        # Validation metrics
-        val_pred = model.forward(data_loader.X_test, training=False)
-        val_loss = model.categorical_cross_entropy(y_test, val_pred, pos_weight=pos_weight)
-        val_acc = model.accuracy(y_test, val_pred)
+        # Validation metrics (used for early stopping)
+        val_pred = model.forward(data_loader.X_val, training=False)
+        val_loss = model.categorical_cross_entropy(y_val, val_pred, pos_weight=pos_weight)
+        val_acc = model.accuracy(y_val, val_pred)
         
         # Store history
         model.history['train_loss'].append(train_loss)
@@ -168,10 +169,14 @@ def train_model(config, dataset_path):
 
         # Early stopping check
         if model.check_early_stopping(val_loss, epoch + 1):
-            print(f"\n{BOLD_YELLOW}Early stopping triggered at epoch {epoch + 1}{RESET}")
-            print(f"Best validation loss: {model.best_val_loss:.4f}")
+            print(f"\n{BOLD_MAGENTA}Early stopping triggered at epoch {epoch + 1}{RESET}")
             log_file.write(f"\nEarly stopping triggered at epoch {epoch + 1}\n")
-            log_file.write(f"Best validation loss: {model.best_val_loss:.4f}\n")
+            if model.config.restore_best_weights:
+                print(f"Best validation loss: {model.best_val_loss:.4f}")
+                log_file.write(f"validation loss: {model.best_val_loss:.4f}\n")
+            else:
+                print(f"Actual validation loss: {val_loss:.4f}")
+                log_file.write(f"validation loss: {val_loss:.4f}\n")
             break
     
     # Write final summary to log file
@@ -187,6 +192,22 @@ def train_model(config, dataset_path):
     log_file.write(f"Best Validation Accuracy:   {max(model.history['val_acc']):.4f} (epoch {model.history['val_acc'].index(max(model.history['val_acc']))+1})\n")
     log_file.write(f"Lowest Training Loss:       {min(model.history['train_loss']):.4f} (epoch {model.history['train_loss'].index(min(model.history['train_loss']))+1})\n")
     log_file.write(f"Lowest Validation Loss:     {min(model.history['val_loss']):.4f} (epoch {model.history['val_loss'].index(min(model.history['val_loss']))+1})\n")
+    
+    # Final evaluation on TEST set (unseen data)
+    print(f"\n{BOLD_GREEN}Evaluating on test set...{RESET}")
+    test_pred = model.forward(data_loader.X_test, training=False)
+    test_loss = model.categorical_cross_entropy(y_test, test_pred, pos_weight=pos_weight)
+    test_acc = model.accuracy(y_test, test_pred)
+    
+    print(f"{BOLD_GREEN}TEST SET PERFORMANCE:{RESET}")
+    print(f"  Test Loss:     {test_loss:.4f}")
+    print(f"  Test Accuracy: {test_acc:.4f} ({test_acc*100:.2f}%)")
+    
+    log_file.write(f"\n" + "=" * 80 + "\n")
+    log_file.write(f"TEST SET EVALUATION (Final Performance on Unseen Data)\n")
+    log_file.write(f"=" * 80 + "\n")
+    log_file.write(f"Test Loss:     {test_loss:.4f}\n")
+    log_file.write(f"Test Accuracy: {test_acc:.4f} ({test_acc*100:.2f}%)\n")
     log_file.write(f"=" * 80 + "\n")
     
     # Close log file

@@ -8,11 +8,13 @@ class DataLoader:
         """
         Handles data ingestion, cleaning, splitting, and normalization.
         Args:
-            config: The ModelConfig object containing training_params (test_size, random_state).
+            config: The ModelConfig object containing training_params (test_size, val_size, random_state).
         """
         self.config = config
         self.X_train = None
         self.y_train = None
+        self.X_val = None
+        self.y_val = None
         self.X_test = None
         self.y_test = None
         
@@ -26,30 +28,40 @@ class DataLoader:
     def load_from_csv(self, file_path: str):
         """
         Reads the raw CSV, handles the specific format of the Breast Cancer dataset.
-        Uses split_dataset to split the data into training and validation sets.
+        Performs a 3-way split: Training / Validation / Test
+        - Training: Used to train the model (fit weights)
+        - Validation: Used for early stopping decisions (hyperparameter tuning)
+        - Test: Final evaluation only (never seen during training)
         """
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"Dataset not found at: {file_path}")
 
-        # 1. Split the dataset using the external function
+        # 1. First split: Separate TEST set from the rest
         test_size = self.config.test_size
         random_state = self.config.random_state
-        train_path, validation_path = split_dataset(file_path, test_size, random_state)
+        train_val_path, test_path = split_dataset(file_path, test_size, random_state)
 
-        # 2. Load the split datasets
+        # 2. Second split: Separate TRAINING and VALIDATION sets
+        val_size = self.config.val_size
+        val_size_relative = val_size / (1.0 - test_size)  # Adjust for already removed test set
+        train_path, val_path = split_dataset(train_val_path, val_size_relative, random_state + 1)
+
+        # 3. Load the three split datasets
         self.X_train, self.y_train = self._load_raw_data(train_path)
-        self.X_test, self.y_test = self._load_raw_data(validation_path)
+        self.X_val, self.y_val = self._load_raw_data(val_path)
+        self.X_test, self.y_test = self._load_raw_data(test_path)
 
-        # 3. Normalize
+        # 4. Normalize using ONLY training statistics
         self._normalize()
         
-        # 4. Calculate class weights if needed
+        # 5. Calculate class weights if needed
         self._calculate_class_weights()
 
         print(f"Data Loaded Summary:")
-        print(f"  Training samples: {self.X_train.shape[0]}")
-        print(f"  Test samples:     {self.X_test.shape[0]}")
-        print(f"  Features:         {self.X_train.shape[1]}")
+        print(f"  Training samples:   {self.X_train.shape[0]}")
+        print(f"  Validation samples: {self.X_val.shape[0]}")
+        print(f"  Test samples:       {self.X_test.shape[0]}")
+        print(f"  Features:           {self.X_train.shape[1]}")
         print(f"  Target Distribution (Train): {np.mean(self.y_train):.2%} Malignant")
         
         if self.pos_weight is not None:
@@ -72,13 +84,11 @@ class DataLoader:
             
             parts = line.split(',')
             
-            # SKEPTICAL CHECK: Ensure the row has the expected number of columns
             # ID + Diagnosis + 30 features = 32 columns
             if len(parts) < 32:
                 continue 
 
             # 1. Parse Target (Column 1) -> 'M' is Malignant (1), 'B' is Benign (0)
-            # Column 0 is ID, we discard it as it introduces noise.
             diagnosis = 1 if parts[1] == 'M' else 0
             targets.append(diagnosis)
 
@@ -96,7 +106,8 @@ class DataLoader:
 
     def _normalize(self):
         """
-        Calculate statistics on training data and normalize both train and test sets.
+        Calculate statistics on training data and normalize train, validation, and test sets.
+        Statistics (mean, std) are computed ONLY from training data to avoid data leakage.
         """
         # Calculate Statistics ONLY on Training Data
         self.mean = np.mean(self.X_train, axis=0)
@@ -105,8 +116,9 @@ class DataLoader:
         # Avoid division by zero
         self.std[self.std == 0] = 1e-8
         
-        # Apply Transformation
+        # Apply Transformation to all three sets
         self.X_train = (self.X_train - self.mean) / self.std
+        self.X_val = (self.X_val - self.mean) / self.std
         self.X_test = (self.X_test - self.mean) / self.std
     
     def _calculate_class_weights(self):

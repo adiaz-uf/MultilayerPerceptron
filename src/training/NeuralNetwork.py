@@ -224,8 +224,8 @@ class NeuralNetwork:
                 layer_state['adam_m_b'] = layer.adam_m_b.copy()
                 layer_state['adam_v_b'] = layer.adam_v_b.copy()
                 layer_state['adam_t'] = layer.adam_t
-        
-        weights_copy.append(layer_state)
+            
+            weights_copy.append(layer_state)
         return weights_copy
     
     def _restore_weights(self, weights_copy):
