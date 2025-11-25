@@ -115,7 +115,8 @@ def train_model(config, dataset_path):
     
     for epoch in range(config.epochs):
         # Training phase
-        epoch_losses = []
+        total_train_loss = 0.0
+        num_samples = 0
         
         # Get batches using DataLoader's method
         for X_batch, y_batch_raw in data_loader.get_training_batch():
@@ -127,19 +128,25 @@ def train_model(config, dataset_path):
             
             # Calculate loss
             loss = model.categorical_cross_entropy(y_batch, y_pred, pos_weight=pos_weight)
-            epoch_losses.append(loss)
+
+            # Get the actual size of this specific batch
+            current_batch_size = X_batch.shape[0]
+            
+            # Accumulate weighted loss
+            total_train_loss += loss * current_batch_size
+            num_samples += current_batch_size
             
             # Backward pass
             model.backward(y_batch, y_pred)
         
         # Calculate training metrics
-        train_loss = np.mean(epoch_losses)
+        train_loss = total_train_loss / num_samples
         train_pred = model.forward(data_loader.X_train, training=False)
         train_acc = model.accuracy(y_train, train_pred)
         
         # Validation metrics
         val_pred = model.forward(data_loader.X_test, training=False)
-        val_loss = model.binary_cross_entropy(y_test, val_pred)
+        val_loss = model.categorical_cross_entropy(y_test, val_pred, pos_weight=pos_weight)
         val_acc = model.accuracy(y_test, val_pred)
         
         # Store history
@@ -158,6 +165,8 @@ def train_model(config, dataset_path):
                       f"loss: {train_loss:.4f} - acc: {train_acc:.4f} - "
                       f"val_loss: {val_loss:.4f} - val_acc: {val_acc:.4f}\n")
         log_file.flush()  # Ensure it's written immediately
+
+        # TODO: implement early stopping
     
     # Write final summary to log file
     log_file.write(f"\n" + "=" * 80 + "\n")

@@ -64,8 +64,9 @@ class ModelConfig:
 
         # 6. Early Stopping Settings
         early_stop_conf = train_params.get('early_stopping', {})
-        self.early_stopping_patience: int = early_stop_conf.get('patience', 10)
-        self.early_stopping_delta: float = early_stop_conf.get('delta', 0.001)
+        self.early_stopping_patience: int = int(early_stop_conf.get('patience', 10))
+        self.early_stopping_delta: float = float(early_stop_conf.get('delta', 0.001))
+        self.restore_best_weights: bool = early_stop_conf.get('restore_best_weights', False)
 
     def _load_yaml(self) -> Dict[str, Any]:
         """Safely loads the YAML file."""

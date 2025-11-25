@@ -29,7 +29,9 @@ training_params:
 
   loss_function:
     use_pos_weight: false
+    pos_weight: 0.0
 
   early_stopping:
     patience: 10
     delta: 0.001
+    restore_best_weights: false

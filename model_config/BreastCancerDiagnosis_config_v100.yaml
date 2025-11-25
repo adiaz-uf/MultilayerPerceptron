@@ -17,7 +17,7 @@ model_config:
 training_params:
   test_size: 0.1
   random_state: 45
-  epochs: 500
+  epochs: 900
   batch_size: 24
   dropout_rate: 0.0
 
@@ -34,3 +34,4 @@ training_params:
   early_stopping:
     patience: 10
     delta: 0.001
+    restore_best_weights: false
