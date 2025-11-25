@@ -36,17 +36,40 @@ class DataLoader:
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"Dataset not found at: {file_path}")
 
-        # 1. First split: Separate TEST set from the rest
+        # Get configuration parameters
         test_size = self.config.test_size
-        random_state = self.config.random_state
-        train_val_path, test_path = split_dataset(file_path, test_size, random_state)
-
-        # 2. Second split: Separate TRAINING and VALIDATION sets
         val_size = self.config.val_size
-        val_size_relative = val_size / (1.0 - test_size)  # Adjust for already removed test set
-        train_path, val_path = split_dataset(train_val_path, val_size_relative, random_state + 1)
-
-        # 3. Load the three split datasets
+        random_state = self.config.random_state
+        
+        # Step 1: Use split_dataset to create training and validation files
+        val_test_size = test_size + val_size
+        train_path, val_test_path = split_dataset(file_path, val_test_size, random_state)
+        
+        # Step 2: Split the validation file into validation and test
+        test_size_relative = test_size / val_test_size
+        
+        # Read the validation+test file
+        df_val_test = pd.read_csv(val_test_path, header=None)
+        df_val_test = df_val_test.sample(frac=1, random_state=random_state + 1).reset_index(drop=True)
+        
+        # Calculate split index
+        split_idx = int(len(df_val_test) * (1 - test_size_relative))
+        
+        # Split into validation and test
+        val_df = df_val_test[:split_idx]
+        test_df = df_val_test[split_idx:]
+        
+        # Get the directory of the input file
+        data_dir = os.path.dirname(file_path)
+        
+        # Save the validation and test files
+        val_path = os.path.join(data_dir, 'data_validation.csv')
+        test_path = os.path.join(data_dir, 'data_test.csv')
+        
+        val_df.to_csv(val_path, index=False, header=False)
+        test_df.to_csv(test_path, index=False, header=False)
+        
+        # Load the three split datasets
         self.X_train, self.y_train = self._load_raw_data(train_path)
         self.X_val, self.y_val = self._load_raw_data(val_path)
         self.X_test, self.y_test = self._load_raw_data(test_path)
