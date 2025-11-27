@@ -152,9 +152,9 @@ def load_and_predict(model_path, data_path, config_path):
         
         print(f"\n{BOLD_CYAN}CONFUSION MATRIX:{RESET}")
         print(f"                Predicted")
-        print(f"               B      M")
-        print(f"Actual  B    {TN:3d}    {FP:3d}")
-        print(f"        M    {FN:3d}    {TP:3d}")
+        print(f"                B      M")
+        print(f"Actual   B    {BOLD_GREEN}{TN:3d}    {BOLD_RED}{FP:3d}{RESET}")
+        print(f"         M    {BOLD_RED}{FN:3d}    {BOLD_GREEN}{TP:3d}{RESET}")
     else:
         print(f"{BOLD_GREEN}PREDICTIONS:{RESET}")
         print(f"  Benign (B):    {np.sum(pred_classes == 0)} samples")
