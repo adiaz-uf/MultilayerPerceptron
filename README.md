@@ -58,7 +58,7 @@ This is an educational implementation of an artificial neural network that:
 - Early Stopping with best weights restoration
 
 #### 3. **DataLoader**
-- Loads and splits data: **Training** (70%) / **Validation** (15%) / **Test** (15%)
+- Loads and splits data: **Training** / **Validation** / **Test**
 - Z-score normalization using training set statistics
 - Imbalanced class handling with weighting
 
@@ -150,7 +150,6 @@ venv\Scripts\activate     # Windows
 - **numpy**: Matrix operations and linear algebra
 - **pandas**: Tabular data manipulation
 - **matplotlib**: Plot visualization
-- **seaborn**: Statistical visualization
 - **jupyterlab**: Exploratory analysis (optional)
 
 ---
@@ -187,6 +186,8 @@ make train1
 #   --config model_config/BreastCancerDiagnosis_config_v100.yaml
 ```
 
+
+
 #### Train Model v1.1.0 (Adam + ReLU + Early Stopping)
 ```bash
 make train2
@@ -201,6 +202,9 @@ make train3
 - **Trained model**: `models/breast_cancer_diagnosis_vX.X.X.npz`
 - **Training log**: `models/breast_cancer_diagnosis_vX.X.X_training_log.txt`
 - **Learning curve plot**: `plots/breast_cancer_diagnosis_vX.X.X_learning_curves.png`
+<img width="2082" height="730" alt="v1 0 0-plot" src="https://github.com/user-attachments/assets/72641114-a69c-48d2-8219-496c5684f107" />
+<img width="2082" height="730" alt="v1 1 0-plot" src="https://github.com/user-attachments/assets/be3a38df-03d4-43cb-bf2b-ff9dcc07f4e1" />
+<img width="2082" height="730" alt="v1 2 0-plot" src="https://github.com/user-attachments/assets/8c955207-5bb4-4d0f-941a-73cea73b3c70" />
 
 ---
 
@@ -237,6 +241,10 @@ python src/prediction/predict.py \
 - **F1-Score**
 - **Confusion Matrix**
 
+<img width="333" height="400" alt="prediction-v1 0 0" src="https://github.com/user-attachments/assets/ba8e188c-f81d-4a97-a974-8f4752fa593e" />
+<img width="333" height="400" alt="prediction-v1 1 0" src="https://github.com/user-attachments/assets/06a859f6-bd52-45aa-ac7a-ecb856832c98" />
+<img width="333" height="400" alt="prediction-v1 2 0" src="https://github.com/user-attachments/assets/ecae01ee-7fc1-4ec3-bdd5-3366a1c75302" />
+
 ---
 
 ### 4. Model Comparison
@@ -251,6 +259,9 @@ Generates comparative visualizations of:
 - Accuracy per epoch
 - Final metrics of each model
 
+<img width="1030" height="405" alt="model-comparation" src="https://github.com/user-attachments/assets/d1486e8b-0bef-4f76-8f47-d5131b945d31" />
+<img width="2684" height="1032" alt="comparation" src="https://github.com/user-attachments/assets/ae817ddb-da18-4123-97e5-f5621303d953" />
+
 ---
 
 ## ⚙️ Model Configuration
@@ -263,7 +274,7 @@ model_config:
   model_version: "1.0.0"
 
   architecture:
-    hidden_layers: [24, 24]        # Hidden layers
+    hidden_layers: [60, 15]        # Hidden layers
     input_dim: 30                  # 30 input features
     activation_fn: "sigmoid"       # relu, sigmoid
     use_dropout_rate: true         # Enable dropout
@@ -273,9 +284,9 @@ model_config:
     - "M"  # Malignant
 
 training_params:
-  test_size: 0.15                 # 15% for testing
-  val_size: 0.15                  # 15% for validation
-  random_state: 42                # Random seed
+  test_size: 0.1                  # 15% for testing
+  val_size: 0.1                   # 15% for validation
+  random_state: 40                # Random seed
   epochs: 900
   batch_size: 24
   dropout_rate: 0.0               # Dropout rate
@@ -290,8 +301,8 @@ training_params:
     pos_weight: 0.0               # 0.0 = automatic
 
   early_stopping:
-    patience: 0                   # 0 = disabled
-    delta: 0.001                  # Minimum improvement required
+    patience: 30                  # 0 = disabled
+    delta: 0.0001                 # Minimum improvement required
     restore_best_weights: false   # Restore best weights
 ```
 
@@ -300,29 +311,29 @@ training_params:
 ## 📊 Trained Models
 
 ### Model v1.0.0
-- **Architecture**: [30] → [24, 24] → [2]
+- **Architecture**: [30] → [60, 15] → [2]
 - **Activation**: Sigmoid
 - **Optimizer**: Adam (lr=0.0001, wd=0.0001)
 - **Epochs**: 900
 - **Batch Size**: 24
-- **Early Stopping**: No
+- **Early Stopping**: Yes (patience=30, delta=0.0001)
 
 ### Model v1.1.0
-- **Architecture**: [30] → [24, 24, 24] → [2]
+- **Architecture**: [30] → [48, 24, 12] → [2]
 - **Activation**: ReLU
 - **Optimizer**: Adam (lr=0.0001)
-- **Epochs**: 100
+- **Epochs**: 500
 - **Batch Size**: 2
-- **Early Stopping**: Yes (patience=10, delta=0.0005)
+- **Early Stopping**: Yes (patience=10, delta=0.0001)
 
 ### Model v1.2.0
-- **Architecture**: [30] → [24, 24, 24] → [2]
+- **Architecture**: [30] → [24, 24, 12] → [2]
 - **Activation**: Sigmoid
 - **Optimizer**: SGD (lr=0.001, wd=0.001)
 - **Epochs**: 1200
 - **Batch Size**: 4
 - **Dropout**: 0.1
-- **Early Stopping**: Yes (patience=15, delta=0.0005)
+- **Early Stopping**: Yes (patience=15, delta=0.0002)
 
 ---
 
@@ -395,9 +406,9 @@ Models achieve the following approximate metrics on the test set:
 
 | Model   | Accuracy | Precision | Recall | F1-Score |
 |---------|----------|-----------|--------|----------|
-| v1.0.0  | ~97%     | ~95%      | ~96%   | ~95%     |
-| v1.1.0  | ~98%     | ~97%      | ~97%   | ~97%     |
-| v1.2.0  | ~96%     | ~94%      | ~95%   | ~94%     |
+| v1.0.0  | ~98.25%  | ~95.83%   | ~100%  | ~97.87%  |
+| v1.1.0  | ~100%    | ~100%     | ~100%  | ~100%    |
+| v1.2.0  | ~96.49%  | ~95.65%   | ~95.65% | ~95.65% |
 
 *Note: Results may vary depending on random data split*
 
@@ -469,17 +480,6 @@ This project is designed to:
 - Visualize the learning process
 
 **Not optimized for production**, but excellent for learning how neural networks work "under the hood".
-
----
-
-## 🤝 Contributions
-
-This is an educational project. Suggested improvements include:
-- More activation functions (Tanh, Leaky ReLU, etc.)
-- Batch Normalization
-- More optimizers (RMSprop, AdaGrad)
-- Support for convolutional architectures
-- K-fold cross-validation
 
 ---
 
