@@ -1,5 +1,4 @@
 jupyterlab
-seaborn
 pandas
 matplotlib
 numpy
